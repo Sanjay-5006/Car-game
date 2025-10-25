@@ -1,0 +1,121 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+
+public class CarGame extends JPanel implements ActionListener, KeyListener {
+    private Timer timer;
+    private int playerX = 200; // Player car X position
+    private int playerY = 500; // Player car Y position
+    private int enemyX, enemyY; // Enemy car position
+    private boolean gameOver = false;
+    private int score = 0;
+    private Random rand = new Random();
+
+    public CarGame() {
+        setFocusable(true);
+        setPreferredSize(new Dimension(400, 600));
+        setBackground(Color.DARK_GRAY);
+        addKeyListener(this);
+
+        enemyX = rand.nextInt(3) * 130 + 20; // Random lane
+        enemyY = -200;
+
+        timer = new Timer(20, this);
+        timer.start();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (!gameOver) {
+            enemyY += 10;
+
+            // Enemy car reached bottom — reset it
+            if (enemyY > 600) {
+                enemyY = -200;
+                enemyX = rand.nextInt(3) * 130 + 20;
+                score++;
+            }
+
+            // Collision detection
+            if (new Rectangle(playerX, playerY, 50, 100).intersects(new Rectangle(enemyX, enemyY, 50, 100))) {
+                gameOver = true;
+                timer.stop();
+            }
+
+            repaint();
+        }
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // Road lanes
+        g.setColor(Color.WHITE);
+        for (int i = 0; i < 600; i += 80) {
+            g.fillRect(133, i, 5, 40);
+            g.fillRect(266, i, 5, 40);
+        }
+
+        // Player car
+        g.setColor(Color.CYAN);
+        g.fillRoundRect(playerX, playerY, 50, 100, 10, 10);
+
+        // Enemy car
+        g.setColor(Color.RED);
+        g.fillRoundRect(enemyX, enemyY, 50, 100, 10, 10);
+
+        // Score
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.drawString("Score: " + score, 10, 30);
+
+        if (gameOver) {
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("Arial", Font.BOLD, 32));
+            g.drawString("GAME OVER!", 100, 250);
+            g.setFont(new Font("Arial", Font.PLAIN, 18));
+            g.drawString("Press R to Restart", 130, 300);
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int code = e.getKeyCode();
+
+        if (!gameOver) {
+            if (code == KeyEvent.VK_LEFT && playerX > 20) {
+                playerX -= 130; // move left
+            } else if (code == KeyEvent.VK_RIGHT && playerX < 280) {
+                playerX += 130; // move right
+            }
+        } else if (code == KeyEvent.VK_R) {
+            restartGame();
+        }
+    }
+
+    private void restartGame() {
+        playerX = 200;
+        playerY = 500;
+        enemyY = -200;
+        enemyX = rand.nextInt(3) * 130 + 20;
+        score = 0;
+        gameOver = false;
+        timer.start();
+        repaint();
+    }
+
+    @Override public void keyReleased(KeyEvent e) {}
+    @Override public void keyTyped(KeyEvent e) {}
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Car Racing Game");
+        CarGame game = new CarGame();
+        frame.add(game);
+        frame.pack();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
